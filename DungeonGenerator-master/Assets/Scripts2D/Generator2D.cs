@@ -8,7 +8,10 @@ public class Generator2D : MonoBehaviour {
     enum CellType {
         None,
         Room,
-        Hallway
+        Hallway,
+        Door,
+        Wall
+        // add wall and door types here
     }
 
     class Room {
@@ -44,6 +47,11 @@ public class Generator2D : MonoBehaviour {
     List<Room> rooms;
     Delaunay2D delaunay;
     HashSet<Prim.Edge> selectedEdges;
+    List<Prim.Edge> mst;
+    List<Prim.Edge> edges;
+    static int V = 9;
+    List<float> distance;
+    int[] dist;
 
     void Start() {
         Generate();
@@ -130,6 +138,74 @@ public class Generator2D : MonoBehaviour {
         }
     }
 
+    int minDistance(int[] dist, bool[] sptSet)
+    {
+        // Initialize min value now
+        int min = int.MaxValue, min_index = -1;
+
+        for (int v = 0; v < V; v++)
+            if (sptSet[v] == false && dist[v] <= min)
+            {
+                min = dist[v];
+                min_index = v;
+            }
+
+        return min_index;
+    }
+
+    void Dijkstra(int[,] graph, int src)
+    {
+        dist
+            = new int[V]; // The output array. dist[i]
+                          // will hold the shortest
+                          // distance from src to i
+
+        // sptSet[i] will true if vertex
+        // i is included in shortest path
+        // tree or shortest distance from
+        // src to i is finalized
+        bool[] sptSet = new bool[V];
+
+        // Initialize all distances as
+        // INFINITE and stpSet[] as false
+        for (int i = 0; i < V; i++)
+        {
+            dist[i] = int.MaxValue;
+            sptSet[i] = false;
+        }
+
+        // Distance of source vertex
+        // from itself is always 0
+        dist[src] = 0;
+
+        // Find shortest path for all vertices
+        for (int count = 0; count < V - 1; count++)
+        {
+            // Pick the minimum distance vertex
+            // from the set of vertices not yet
+            // processed. u is always equal to
+            // src in first iteration.
+            int u = minDistance(dist, sptSet);
+
+            // Mark the picked vertex as processed
+            sptSet[u] = true;
+
+            // Update dist value of the adjacent
+            // vertices of the picked vertex.
+            for (int v = 0; v < V; v++)
+
+                // Update dist[v] only if is not in
+                // sptSet, there is an edge from u
+                // to v, and total weight of path
+                // from src to v through u is smaller
+                // than current value of dist[v]
+                if (!sptSet[v] && graph[u, v] != 0
+                    && dist[u] != int.MaxValue
+                    && dist[u] + graph[u, v] < dist[v])
+                    dist[v] = dist[u] + graph[u, v];
+        }
+    }
+
     void PathfindHallways() {
         DungeonPathfinder2D aStar = new DungeonPathfinder2D(size);
 
@@ -165,6 +241,7 @@ public class Generator2D : MonoBehaviour {
                     var current = path[i];
 
                     if (grid[current] == CellType.None) {
+                        // here is where you say, if an adjacent tile is a room tile, designate current tile as door tile
                         grid[current] = CellType.Hallway;
                     }
 
@@ -177,8 +254,46 @@ public class Generator2D : MonoBehaviour {
 
                 foreach (var pos in path) {
                     if (grid[pos] == CellType.Hallway) {
+                        //door tile is placed here
                         PlaceHallway(pos);
                     }
+                }
+            }
+        }
+    }
+
+    void PlaceWallTiles()
+    {
+        //another method here where you search through the grid and find each room tile that has adjacent none tiles
+        //place a wall tile in each of those adjacent none tiles
+        var roomList = new List<Room>();
+        foreach (var edge in selectedEdges)
+        {
+            var startRoom = (edge.U as Vertex<Room>).Item;
+            var endRoom = (edge.V as Vertex<Room>).Item;
+            roomList.Add(startRoom);
+            roomList.Add(endRoom);
+        }
+
+        for (int i = 0; i < roomList.Count; i++)
+        {
+            foreach (var pos in roomList[i].bounds.allPositionsWithin)
+            {
+                if (grid[pos + Vector2Int.up] == CellType.None)
+                {
+                    grid[pos + Vector2Int.up] = CellType.Wall;
+                }
+                else if (grid[pos + Vector2Int.up] == CellType.None)
+                {
+                    grid[pos + Vector2Int.up] = CellType.Wall;
+                }
+                else if (grid[pos + Vector2Int.up] == CellType.None)
+                {
+                    grid[pos + Vector2Int.up] = CellType.Wall;
+                }
+                else if (grid[pos + Vector2Int.up] == CellType.None)
+                {
+                    grid[pos + Vector2Int.up] = CellType.Wall;
                 }
             }
         }
@@ -196,5 +311,20 @@ public class Generator2D : MonoBehaviour {
 
     void PlaceHallway(Vector2Int location) {
         PlaceCube(location, new Vector2Int(1, 1), blueMaterial);
+    }
+
+    void GetTypesOfRooms()
+    {
+        //convert 'selectedEdges' into an adjacency matrix to call Dijkstra here
+        //get all the vertices in 'selectedEdges' and tag each of them with number label (edit the Vertex class)
+        //can identify the vertex to turn into a specific room from the number tag
+        foreach (var edge in selectedEdges)
+        {
+            //the vertices are assigned a number and added to a list; keep checking the list to make sure each vertex
+            //has a unique number/tag; get number of vertices from the mst edges plus one
+            int[,] edgeGraph = new int[,] { };
+        }
+        //Dijkstra(distance, 0);
+
     }
 }
