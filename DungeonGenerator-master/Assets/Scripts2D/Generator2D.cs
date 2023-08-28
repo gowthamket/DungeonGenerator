@@ -36,6 +36,8 @@ public class Generator2D : MonoBehaviour {
     Material redMaterial;
     [SerializeField]
     Material blueMaterial;
+    [SerializeField]
+    GameObject[] roomArray;
 
     Random random;
     Grid2D<CellType> grid;
@@ -51,6 +53,7 @@ public class Generator2D : MonoBehaviour {
         random = new Random(0);
         grid = new Grid2D<CellType>(size, Vector2Int.zero);
         rooms = new List<Room>();
+        roomArray = new GameObject[roomCount];
 
         PlaceRooms();
         Triangulate();
